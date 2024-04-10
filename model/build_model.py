@@ -66,7 +66,7 @@ def build_maskrcnn(configs):
     model_dict = model.state_dict()
     pretrained_dict = torch.load(pretrained_model_path)
     model_dict.update(pretrained_dict)
-    model.load_state_dict(model_dict)
+    model.load_state_dict(model_dict, strict=False)
     print("load model from {}".format(pretrained_model_path))
 
   return model

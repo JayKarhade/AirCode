@@ -32,9 +32,14 @@ def relocalization(configs):
   configs['num_gpu'] = [0]
   configs['public_model'] = 0
 
-  superpoint_model_path = os.path.join(model_dir, "points_model.pth")
-  maskrcnn_model_path = os.path.join(model_dir, "maskrcnn_model.pth")
-  gcn_model_path = os.path.join(model_dir, "gcn_model.pth")
+  # superpoint_model_path = os.path.join(model_dir, "points_model.pth")
+  # maskrcnn_model_path = os.path.join(model_dir, "maskrcnn_model.pth")
+  # gcn_model_path = os.path.join(model_dir, "gcn_model.pth")
+
+  superpoint_model_path = os.path.join('/home/jay/Downloads/point_model.pth')
+  maskrcnn_model_path = os.path.join('/home/jay/Downloads/maskrcnn_model.pth')
+  gcn_model_path = os.path.join('/home/jay/Downloads/gcn_model.pth')
+
   configs["maskrcnn_model_path"] = maskrcnn_model_path
   configs["superpoint_model_path"] = superpoint_model_path
   configs["graph_model_path"] = gcn_model_path
@@ -43,11 +48,12 @@ def relocalization(configs):
   superpoint_model = build_superpoint_model(configs, requires_grad=False)
   superpoint_model.eval()
 
+  gcn_model = build_gcn(configs)
+  gcn_model.eval()
+
   maskrcnn_model = build_maskrcnn(configs)
   maskrcnn_model.eval()
 
-  gcn_model = build_gcn(configs)
-  gcn_model.eval()
 
   # data
   seqs = ['00', '05', '06']
@@ -138,7 +144,7 @@ def main():
   config_file = args.config_file
   f = open(config_file, 'r', encoding='utf-8')
   configs = f.read()
-  configs = yaml.load(configs)
+  configs = yaml.load(configs, Loader=yaml.Loader)
   configs['use_gpu'] = args.gpu
   configs['data_root'] = args.data_root
   configs['model_dir'] = args.model_dir

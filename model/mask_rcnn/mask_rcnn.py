@@ -4,9 +4,9 @@ import torch
 from torch import nn
 from torchvision.ops import MultiScaleRoIAlign
 
-from torchvision.models.utils import load_state_dict_from_url
+# from torchvision.models.utils import load_state_dict_from_url
 from torchvision.models.detection.faster_rcnn import FasterRCNN
-from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+# from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 from torchvision.models.detection.anchor_utils import AnchorGenerator
 from torchvision.models.detection.faster_rcnn import TwoMLPHead
 from torchvision.models.detection.image_list import ImageList
@@ -213,6 +213,8 @@ class MaskRCNN(FasterRCNN):
       representation_size = 1024
       box_head = TwoMLPHead(out_channels * resolution, representation_size)
 
+    # import pdb; pdb.set_trace()
+    rpn_score_thresh = 0.0
 
     super(MaskRCNN, self).__init__(
         backbone, num_classes,
@@ -225,7 +227,7 @@ class MaskRCNN(FasterRCNN):
         rpn_post_nms_top_n_train, rpn_post_nms_top_n_test,
         rpn_nms_thresh,
         rpn_fg_iou_thresh, rpn_bg_iou_thresh,
-        rpn_batch_size_per_image, rpn_positive_fraction,
+        rpn_batch_size_per_image, rpn_positive_fraction,rpn_score_thresh,
         # Box parameters
         box_roi_pool, box_head, box_predictor,
         box_score_thresh, box_nms_thresh, box_detections_per_img,
