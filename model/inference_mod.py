@@ -23,6 +23,7 @@ def detection_inference(maskrcnn_model, superpoint_model, batch, use_gpu, gaussi
   
   with torch.no_grad():
     original_images = batch['image']
+    # print(original_images.shape)
     original_images = [tensor_to_numpy(img.clone()) for img in original_images]
 
     # preprocess
@@ -32,13 +33,14 @@ def detection_inference(maskrcnn_model, superpoint_model, batch, use_gpu, gaussi
     new_sizes = sizes['new_sizes']
 
     # model inference
-    _, detections = maskrcnn_model(images, sizes) 
+    # _, detections = maskrcnn_model(images, sizes) 
+    detections = maskrcnn_model(images)
     points_output = superpoint_model(images) 
 
     # postprocess
     detections, points_output = post.postprocess(new_sizes, original_sizes, detection_threshold,
        detections, points_output)
-    print(detections)
+
     # save results
     if save_dir is not None:
       image_names = batch['image_name']

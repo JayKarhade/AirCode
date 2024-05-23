@@ -4,6 +4,8 @@
 from __future__ import print_function
 import sys
 sys.path.append('.')
+# sys.path = ['/storage2/datasets/jkarhade/AirCode'] + sys.path
+# print(sys.path)
 import os
 
 import torch
@@ -32,13 +34,9 @@ def relocalization(configs):
   configs['num_gpu'] = [0]
   configs['public_model'] = 0
 
-  # superpoint_model_path = os.path.join(model_dir, "points_model.pth")
-  # maskrcnn_model_path = os.path.join(model_dir, "maskrcnn_model.pth")
-  # gcn_model_path = os.path.join(model_dir, "gcn_model.pth")
-
-  superpoint_model_path = os.path.join('/home/jay/Downloads/point_model.pth')
-  maskrcnn_model_path = os.path.join('/home/jay/Downloads/maskrcnn_model.pth')
-  gcn_model_path = os.path.join('/home/jay/Downloads/gcn_model.pth')
+  superpoint_model_path = os.path.join(model_dir, "point_model.pth")
+  maskrcnn_model_path = os.path.join(model_dir, "maskrcnn_model.pth")
+  gcn_model_path = os.path.join(model_dir, "gcn_model.pth")
 
   configs["maskrcnn_model_path"] = maskrcnn_model_path
   configs["superpoint_model_path"] = superpoint_model_path
@@ -56,7 +54,7 @@ def relocalization(configs):
 
 
   # data
-  seqs = ['00', '05', '06']
+  seqs = ['05']#, '05', '06']
   
   pr_curves_list = []
   for seq in seqs:
@@ -77,6 +75,7 @@ def relocalization(configs):
 
       net_output = network_output(image, superpoint_model, maskrcnn_model, gcn_model, configs)
       net_output = {'points': net_output[0], 'objects': net_output[1], 'descs': net_output[2]}
+      # print(net_output)
       if net_output['points'] is None:
         continue
 

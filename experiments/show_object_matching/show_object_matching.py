@@ -16,13 +16,18 @@ import copy
 
 from model.inference import maskrcnn_inference
 from model.build_model import build_maskrcnn, build_gcn, build_superpoint_model
-from model.inference import detection_inference
+# from model.inference import detection_inference
+from model.inference_mod import detection_inference
 from datasets.utils.pipeline import makedir
 from kornia.feature import match_nn
 from datasets.utils import preprocess
 from experiments.show_object_matching.draw_object import draw_object, compute_colors_for_labels
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+#Temporary model
+import torchvision.transforms as T
+import torchvision
 
 def filter_objects(data, target_labels=None):
   '''
@@ -170,7 +175,9 @@ def network_output(image, points_model, maskrcnn_model, gcn_model, configs, filt
 
 
 def read_image(img_path):
+  print(img_path)
   image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+  image = cv2.resize(image, (1242,375))
   if len(image.shape) == 2:
     image = cv2.merge([image, image, image])
   return image
@@ -187,7 +194,7 @@ def show_object_matching(configs):
   configs['num_gpu'] = [0]
   configs['public_model'] = 0
 
-  superpoint_model_path = os.path.join(model_dir, "points_model.pth")
+  superpoint_model_path = os.path.join(model_dir, "point_model.pth")
   maskrcnn_model_path = os.path.join(model_dir, "maskrcnn_model.pth")
   gcn_model_path = os.path.join(model_dir, "gcn_model.pth")
   configs["maskrcnn_model_path"] = maskrcnn_model_path
@@ -198,7 +205,10 @@ def show_object_matching(configs):
   superpoint_model = build_superpoint_model(configs, requires_grad=False)
   superpoint_model.eval()
 
-  maskrcnn_model = build_maskrcnn(configs)
+  # maskrcnn_model = build_maskrcnn(configs)
+  # maskrcnn_model.eval()
+
+  maskrcnn_model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
   maskrcnn_model.eval()
 
   gcn_model = build_gcn(configs)
@@ -206,7 +216,9 @@ def show_object_matching(configs):
 
   # template image
   tpl_path = os.path.join(data_root, "template.jpg")
+  tpl_path = '/storage2/datasets/jkarhade/AirCode/test_datasets/query/Circle_View1_000001.jpg'
   tpl_image = read_image(tpl_path)
+  print(tpl_image.shape)
   tpl_output = network_output(tpl_image, superpoint_model, maskrcnn_model, gcn_model, configs)
   tpl_data = {'image':tpl_image, 'points': tpl_output[0], 'objects': tpl_output[1],
        'descs': tpl_output[2], 'keeps': tpl_output[3]}
@@ -218,7 +230,8 @@ def show_object_matching(configs):
   tpl_labels = tpl_data['objects']['labels']
   print(tpl_labels)
 
-  seq_path = os.path.join(data_root, "seq")
+  # seq_path = os.path.join(data_root, "seq")
+  seq_path = '/storage2/datasets/jkarhade/AirCode/test_datasets/database'
   image_names = os.listdir(seq_path)
   image_names.sort()
   with torch.no_grad():
@@ -271,7 +284,7 @@ def main():
   config_file = args.config_file
   f = open(config_file, 'r', encoding='utf-8')
   configs = f.read()
-  configs = yaml.load(configs)
+  configs = yaml.load(configs, Loader=yaml.FullLoader)
   configs['use_gpu'] = args.gpu
   configs['data_root'] = args.data_root
   configs['model_dir'] = args.model_dir

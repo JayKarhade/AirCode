@@ -56,9 +56,9 @@ def overlay_class_names(image, boxes, textes, colors):
 
   for box, text, color in zip(boxes, textes, colors):
     x, y = (box[0] + box[2]) / 2 - 100, (box[1] + box[3]) / 2
-    cv2.putText(
-        image, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 2
-    )
+    # cv2.putText(
+    #     image, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 2
+    # )
 
   return image
 

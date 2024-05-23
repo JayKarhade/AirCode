@@ -55,7 +55,7 @@ def relocalization_offline(configs):
   dataset_name = configs['data']['name']
 
   # data
-  seqs = ['00', '05', '06']
+  seqs = ['00'] #['00', '05', '06']
   similarity_thr = 0.95
   results = {}
   for seq in seqs:
@@ -215,7 +215,7 @@ def main():
   config_file = args.config_file
   f = open(config_file, 'r', encoding='utf-8')
   configs = f.read()
-  configs = yaml.load(configs)
+  configs = yaml.load(configs, Loader=yaml.Loader)
   configs['data_root'] = args.data_root
   configs['net_output_dir'] = args.net_output_dir
   configs['save_dir'] = args.save_dir

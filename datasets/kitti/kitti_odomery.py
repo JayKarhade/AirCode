@@ -18,7 +18,8 @@ from datasets.utils.pipeline import makedir
 
 class KittiOdometry(Dataset):
   def __init__(self, data_root, id, dis_thr=15, angle_thr=1.0, interval=100):
-    image_dir = os.path.join(data_root, "images", id, "image_0")
+    # image_dir = os.path.join(data_root, "images", id, "image_0")
+    image_dir = os.path.join(data_root,"sequences", id, "image_2")
     label_file = os.path.join(data_root, "poses", (id+".txt"))
     image_names = os.listdir(image_dir)
     image_names.sort()

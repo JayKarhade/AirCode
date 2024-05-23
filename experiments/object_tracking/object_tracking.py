@@ -16,7 +16,8 @@ import argparse
 from model.build_model import build_maskrcnn, build_gcn
 from model.inference import maskrcnn_inference
 from model.build_model import build_maskrcnn, build_gcn, build_superpoint_model
-from model.inference import detection_inference
+# from model.inference import detection_inference
+from model.inference_mod import detection_inference
 from model.backbone.fcn import VGGNet
 from model.superpoint.vgg_like import VggLike
 from datasets.utils.pipeline import makedir
@@ -33,8 +34,12 @@ from experiments.utils.utils import save_tracking_results, plot_pr_curves, plot_
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+#Temporary model
+import torchvision.transforms as T
+import torchvision
 
-def network_output(image, points_model, maskrcnn_model, gcn_model, configs):  
+
+def network_output(image, points_model, maskrcnn_model, gcn_model, configs, image_name):  
   with torch.no_grad():
     data_config = configs['data']
     superpoint_model_config = configs['model']['superpoint']
@@ -44,7 +49,12 @@ def network_output(image, points_model, maskrcnn_model, gcn_model, configs):
     transform = transforms.ToTensor()
     image = transform(image)
     image = image.unsqueeze(0)
-    batch = {'image': image}
+    batch = {'image': image, 'image_name': [image_name.split('.')[0]]}
+
+    save_dir = '/storage2/datasets/jkarhade/AirCode/mask_rcnn_results'
+
+    if os.path.exists(save_dir) is False:
+      os.makedirs(save_dir)
 
     points_output, detections, _ = detection_inference(maskrcnn_model, points_model, batch, use_gpu, 1,
         detection_threshold, data_config, save_dir=None)
@@ -236,6 +246,7 @@ def calculate_pr_curves(frame_batch_info_list, intervals):
       frame_batch_info = frame_batch_info_list[i]
       if last_frame_batch_info is not None and frame_batch_info is not None:
         gt_matrix, match_matrix = match_objects(frame_batch_info, last_frame_batch_info)
+        import pdb; pdb.set_trace()
         if gt_matrix is not None and match_matrix is not None:
           gts.append(gt_matrix)
           matches.append(match_matrix)
@@ -261,7 +272,7 @@ def show_object_tracking(configs):
   configs['num_gpu'] = [0]
   configs['public_model'] = 0
 
-  superpoint_model_path = os.path.join(model_dir, "points_model.pth")
+  superpoint_model_path = os.path.join(model_dir, "point_model.pth")
   maskrcnn_model_path = os.path.join(model_dir, "maskrcnn_model.pth")
   gcn_model_path = os.path.join(model_dir, "gcn_model.pth")
   configs["maskrcnn_model_path"] = maskrcnn_model_path
@@ -272,16 +283,22 @@ def show_object_tracking(configs):
   superpoint_model = build_superpoint_model(configs, requires_grad=False)
   superpoint_model.eval()
 
-  maskrcnn_model = build_maskrcnn(configs)
+  # maskrcnn_model = build_maskrcnn(configs)
+  # maskrcnn_model.eval()
+
+  maskrcnn_model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
   maskrcnn_model.eval()
 
   gcn_model = build_gcn(configs)
   gcn_model.eval()
 
   intervals = [1, 2, 3, 5, 10]
-  seqs = {'kitti':['0002', '0003', '0006', '0010'],
+  seqs = {'kitti':['0000'],#, '0003', '0006', '0010'],
           'otb': ['BlurBody', 'BlurCar2', 'Human2', 'Human7', 'Liquor'],
           'vot': ['bluecar', 'bus6', 'humans_corridor_occ_2_A']}
+  # seqs = {'kitti':['02', '03', '06', '10'],
+  #         'otb': ['BlurBody', 'BlurCar2', 'Human2', 'Human7', 'Liquor'],
+  #         'vot': ['bluecar', 'bus6', 'humans_corridor_occ_2_A']}
   datasets = {'kitti':KittiTracking, 'otb':OtbTracking, 'vot':VotTracking}
   DATASET = datasets[dataset_name]
   SEQNAMES = seqs[dataset_name]
@@ -300,7 +317,7 @@ def show_object_tracking(configs):
       image_name = data['image_name']
       print(image_name)
 
-      net_output = network_output(image, superpoint_model, maskrcnn_model, gcn_model, configs)
+      net_output = network_output(image, superpoint_model, maskrcnn_model, gcn_model, configs, image_name)
       net_output = {'points': net_output[0], 'objects': net_output[1], 'descs': net_output[2]}
 
       tracking_gt = dataset.get_label(image_name)
@@ -311,6 +328,8 @@ def show_object_tracking(configs):
       frame_batch_info = assign_descs(net_output, tracking_gt)
       frame_batch_info = sample_objects(frame_batch_info)
       frame_batch_info_list.append(frame_batch_info)
+
+      import pdb; pdb.set_trace()
 
     pr_curves = calculate_pr_curves(frame_batch_info_list, intervals)
     pr_curves_list.append(pr_curves)
@@ -368,7 +387,7 @@ def main():
   config_file = args.config_file
   f = open(config_file, 'r', encoding='utf-8')
   configs = f.read()
-  configs = yaml.load(configs)
+  configs = yaml.load(configs, Loader=yaml.FullLoader)
   configs['use_gpu'] = args.gpu
   configs['data_root'] = args.data_root
   configs['model_dir'] = args.model_dir
